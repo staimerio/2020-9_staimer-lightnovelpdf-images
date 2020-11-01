@@ -18,6 +18,12 @@ import base64
 # Uuid
 import uuid
 
+# Asyncio
+import asyncio
+
+# Aiohttp
+import aiohttp
+
 # Services
 from retic.services.responses import success_response_service, error_response_service
 import services.imgur.imgur as imgur
@@ -31,7 +37,7 @@ PUBLIC_IMAGES_FOLDER = app.config.get('PUBLIC_IMAGES_FOLDER')
 PUBLIC_IMG_NOT_FOUND = app.config.get('PUBLIC_IMG_NOT_FOUND')
 
 
-def upload_from_url_watermark(urls, width, height, watermark_code=None):
+def upload_from_url_watermark(urls, width, height, watermark_code=None, headers={}):
     """Upload images from urls and if the watermarks params contains some
     watermark these will add to images, one in each corner
 
@@ -40,34 +46,53 @@ def upload_from_url_watermark(urls, width, height, watermark_code=None):
     """
     """Define all variables"""
     _images = []
-
+    max = 5
     try:
-        """For each url do the following"""
-        for _url in urls:
-            """Download image from url"""
-            _downloaded_image = download_img(_url)
-            if _downloaded_image:
-                """If watermark exists, add to image"""
-                if watermark_code:
-                    _downloaded_image = img_watermark(
-                        _downloaded_image,
-                        width,
-                        height,
-                        watermark_code
-                    )
-            else:
-                """Upload image base"""
-                _downloaded_image = open(PUBLIC_IMG_NOT_FOUND, "rb").read()
-            """Upload image to storage"""
-            _uploaded_image = imgur.upload_image(
-                _downloaded_image
-            )
-            """Check if it has any problem"""
-            if _uploaded_image['success'] is False:
-                continue
-            else:
-                """Add image to list"""
-                _images.append((_uploaded_image.get('data')))
+        async def get_download_item_req(url):
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url=url, headers=headers) as response:
+                    idx = 0
+                    _downloaded_image = await response.read()
+                    if _downloaded_image:
+                        """If watermark exists, add to image"""
+                        if watermark_code:
+                            _downloaded_image = img_watermark(
+                                _downloaded_image,
+                                width,
+                                height,
+                                watermark_code
+                            )
+                    else:
+                        """Upload image base"""
+                        _downloaded_image = open(
+                            PUBLIC_IMG_NOT_FOUND, "rb").read()
+                    while idx < max:
+                        """Upload image to storage"""
+                        # _uploaded_image = await imgur.async_upload_image(
+                        #     _downloaded_image,
+                        # )
+                        _uploaded_image = imgur.upload_image(
+                            _downloaded_image,
+                        )
+                        """Check if it has any problem"""
+                        if not _uploaded_image or _uploaded_image['success'] is False:
+                            continue
+                        else:
+                            """Add image to list"""
+                            _images.append((
+                                {
+                                    **_uploaded_image.get('data'),
+                                    u'url': url
+                                }
+                            ))
+                            break
+
+        async def main():
+            promises = [get_download_item_req(_url)
+                        for _url in urls]
+            await asyncio.gather(*promises)
+
+        asyncio.run(main())
         return success_response_service(
             data=_images
         )
@@ -77,9 +102,9 @@ def upload_from_url_watermark(urls, width, height, watermark_code=None):
         )
 
 
-def download_img(download_url):
+def download_img(download_url, headers):
     """Download from the url"""
-    req_download = requests.get(download_url)
+    req_download = requests.get(download_url, headers=headers)
     """Check if the response has any problem"""
     if req_download.status_code != 200:
         return None
