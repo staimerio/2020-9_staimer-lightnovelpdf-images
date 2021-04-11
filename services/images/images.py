@@ -37,7 +37,10 @@ PUBLIC_IMAGES_FOLDER = app.config.get('PUBLIC_IMAGES_FOLDER')
 PUBLIC_IMG_NOT_FOUND = app.config.get('PUBLIC_IMG_NOT_FOUND')
 
 
-def upload_from_url_watermark(urls, width, height, watermark_code=None, headers={}):
+def upload_from_url_watermark(
+    urls, width, height, watermark_code=None, headers={},
+    left_crop=None, top_crop=None, right_crop=None, bottom_crop=None
+):
     """Upload images from urls and if the watermarks params contains some
     watermark these will add to images, one in each corner
 
@@ -60,7 +63,8 @@ def upload_from_url_watermark(urls, width, height, watermark_code=None, headers=
                                 _downloaded_image,
                                 width,
                                 height,
-                                watermark_code
+                                watermark_code,
+                                left_crop=left_crop, top_crop=top_crop, right_crop=right_crop, bottom_crop=bottom_crop
                             )
                     else:
                         """Upload image base"""
@@ -118,6 +122,7 @@ def img_watermark(
     width,
     height,
     watermark_code,
+    left_crop=None, top_crop=None, right_crop=None, bottom_crop=None
 ):
     """Define file paths"""
     _watermark_path = "{0}/{1}".format(
@@ -130,6 +135,13 @@ def img_watermark(
     _watermark = Image.open(_watermark_path)
     """Load the Image from memory"""
     _base_image = Image.open(io.BytesIO(bytes_image))
+    """Crop"""
+    _left_crop = left_crop or 0
+    _top_crop = top_crop or 0
+    _bottom_crop = bottom_crop or _base_image.height
+    _right_crop = right_crop or _base_image.width
+    _base_image = _base_image.crop(
+        (_left_crop, _top_crop, _right_crop, _bottom_crop))
     """Get size from images"""
     _img_width = width or _base_image.width
     _img_height = height or _base_image.height

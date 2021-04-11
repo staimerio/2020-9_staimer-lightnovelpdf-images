@@ -29,6 +29,10 @@ def upload_from_url(req: Request, res: Response, next: Next):
         req.param("height"),
         req.param("watermark_code"),
         req.param("headers"),
+        req.param("left_crop"),
+        req.param("top_crop"),
+        req.param("right_crop"),
+        req.param("bottom_crop"),
     )
     """Check if the response has any problem"""
     if _uploaded_images['valid'] is False:
