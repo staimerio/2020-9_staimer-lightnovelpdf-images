@@ -101,6 +101,7 @@ def upload_from_url_watermark(
             data=_images
         )
     except Exception as err:
+        print(err)
         return error_response_service(
             msg=str(err)
         )
