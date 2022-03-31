@@ -57,8 +57,8 @@ def upload_from_url_watermark(
                     idx = 0
                     _downloaded_image = await response.read()
                     if _downloaded_image:
-                        """If watermark exists, add to image"""
-                        if watermark_code:
+                        if watermark_code or left_crop or top_crop or right_crop or bottom_crop:
+                            """If watermark exists, add to image"""
                             _downloaded_image = img_watermark(
                                 _downloaded_image,
                                 width,
@@ -125,45 +125,53 @@ def img_watermark(
     watermark_code,
     left_crop=None, top_crop=None, right_crop=None, bottom_crop=None
 ):
-    """Define file paths"""
-    _watermark_path = "{0}/{1}".format(
-        PUBLIC_WATERMARKS_FOLDER, watermark_code)
-    """Check if mark exists"""
-    if not isfile(_watermark_path):
-        raise Exception("Watermark not found.")
-
-    """Open the watermark if it exists"""
-    _watermark = Image.open(_watermark_path)
     """Load the Image from memory"""
     _base_image = Image.open(io.BytesIO(bytes_image))
     """Crop"""
     _left_crop = left_crop or 0
     _top_crop = top_crop or 0
-    _bottom_crop = bottom_crop or _base_image.height
-    _right_crop = right_crop or _base_image.width
-    _base_image = _base_image.crop(
-        (_left_crop, _top_crop, _right_crop, _bottom_crop))
-    """Get size from images"""
-    _img_width = width or _base_image.width
-    _img_height = height or _base_image.height
-    _watermark_width, _watermark_height = _watermark.size
-    """Define the size"""
-    _img_size = (_img_width, _img_height,)
-    """Resize image"""
-    _transparent = _base_image.resize(_img_size)
+    _bottom_crop = (
+        _base_image.height- bottom_crop) if bottom_crop else _base_image.height
+    _right_crop = (
+        _base_image.height - right_crop) if right_crop else _base_image.width
+    if _left_crop or _top_crop or _bottom_crop or _right_crop:
+        _base_image = _base_image.crop(
+            (_left_crop, _top_crop, _right_crop, _bottom_crop))
+
+    if width or height:
+        """Get size from images"""
+        _img_width = width or _base_image.width
+        _img_height = height or _base_image.height
+        """Define the size"""
+        _img_size = (_img_width, _img_height,)
+        """Resize image"""
+        _base_image = _base_image.resize(_img_size)
+
     """Get the watermark position"""
-    _position = (
-        int((_img_width-_watermark_width)/2),
-        _img_height-(_watermark_height+5)
-    )
-    """Paste watermark into image"""
-    _transparent.paste(_watermark, _position, mask=_watermark)
+    if watermark_code:
+        """Define file paths"""
+        _watermark_path = "{0}/{1}".format(
+            PUBLIC_WATERMARKS_FOLDER, watermark_code)
+        """Check if mark exists"""
+        if not isfile(_watermark_path):
+            raise Exception("Watermark not found.")
+
+        """Open the watermark if it exists"""
+        _watermark = Image.open(_watermark_path)
+        _watermark_width, _watermark_height = _watermark.size
+        _position = (
+            int((_img_width-_watermark_width)/2),
+            _img_height-(_watermark_height+5)
+        )
+        """Paste watermark into image"""
+        _base_image.paste(_watermark, _position, mask=_watermark)
+
     """Generate id"""
     _img_code = uuid.uuid1().hex
     """Path of the image"""
     _output_image_path = "{0}/{1}.png".format(PUBLIC_IMAGES_FOLDER, _img_code)
     """Save image"""
-    _transparent.save(_output_image_path)
+    _base_image.save(_output_image_path)
     """Open image"""
     with open(_output_image_path, "rb") as image_file:
         _image = base64.b64encode(image_file.read())
