@@ -131,9 +131,9 @@ def img_watermark(
     _left_crop = left_crop or 0
     _top_crop = top_crop or 0
     _bottom_crop = (
-        _base_image.height- bottom_crop) if bottom_crop else _base_image.height
+        _base_image.height - bottom_crop) if bottom_crop and bottom_crop < _base_image.height else _base_image.height
     _right_crop = (
-        _base_image.height - right_crop) if right_crop else _base_image.width
+        _base_image.height - right_crop) if right_crop and right_crop < _base_image.width else _base_image.width
     if _left_crop or _top_crop or _bottom_crop or _right_crop:
         _base_image = _base_image.crop(
             (_left_crop, _top_crop, _right_crop, _bottom_crop))
