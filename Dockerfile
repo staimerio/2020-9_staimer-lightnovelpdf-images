@@ -7,7 +7,7 @@ RUN apt-get update -y && \
     apt install -y python3-pip -y && \
     apt install build-essential libssl-dev libffi-dev python3-dev -y && \
     apt update && \
-    python3 -m pip3 install --upgrade pip
+    python3 -m pip install --upgrade pip
 COPY requirements.txt ./
 RUN pip3 install --no-cache-dir -r requirements.txt
 
