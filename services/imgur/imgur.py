@@ -7,11 +7,11 @@ import requests
 # Services
 from retic.services.general.json import parse
 
-# # Asyncio
-# import asyncio
+# Asyncio
+import asyncio
 
-# # Aiohttp
-# import aiohttp
+# Aiohttp
+import aiohttp
 
 # Constantes
 URL_IMAGE = app.apps['backend']['imgur']['base_url'] + \
@@ -58,27 +58,27 @@ def upload_image(image):
     return _uploaded_image_json
 
 
-# async def async_upload_image(image):
-#     """Upload a image to imgur and return a object
+async def async_upload_image(image):
+    """Upload a image to imgur and return a object
 
-#     :param image: Image to upload
-#     """
+    :param image: Image to upload
+    """
 
-#     """Prepare payload for the request"""
-#     _payload = {
-#         u'image': image
-#     }
-#     _uploaded_image_json = None
-#     """Upload the file"""
-#     async with aiohttp.ClientSession() as session:
-#         async with session.post(url=URL_IMAGE,
-#                                 data=_payload,
-#                                 headers=HEADERS) as response:
-#             if response.status == 200:
-#                 return None
-#             _uploaded_image = await response.read()
-#             """Get the JSON from the response"""
-#             _uploaded_image_json = parse(_uploaded_image)
-#             """Return data"""
-#             return _uploaded_image_json
-#     return _uploaded_image_json
+    """Prepare payload for the request"""
+    _payload = {
+        u'image': image
+    }
+    _uploaded_image_json = None
+    """Upload the file"""
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url=URL_IMAGE,
+                                data=_payload,
+                                headers=HEADERS) as response:
+            if response.status == 200:
+                return None
+            _uploaded_image = await response.read()
+            """Get the JSON from the response"""
+            _uploaded_image_json = parse(_uploaded_image)
+            """Return data"""
+            return _uploaded_image_json
+    return _uploaded_image_json
