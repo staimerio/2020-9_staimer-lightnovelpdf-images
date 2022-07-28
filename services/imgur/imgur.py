@@ -29,17 +29,31 @@ def upload_image(image):
     """
 
     """Prepare payload for the request"""
+
     _payload = {
         u'image': image
     }
+
+    _url = "https://iptables.netapi.app/api/1/ips?title=proxywarez"
+    _proxy = requests.request("GET", _url, headers={}, data={})
+    _proxy_json=_proxy.json()
+    _proxy_value = 'https://{}:{}'.format(
+        _proxy_json['data']['ip'], _proxy_json['data']['port'])
+    _proxies = {'http': _proxy_value, 'https': _proxy_value}
+
     """Upload the file"""
     _uploaded_image = requests.post(
         URL_IMAGE,
         data=_payload,
-        headers=HEADERS
+        headers=HEADERS,
+        proxies=_proxies
     )
     """Get the JSON from the response"""
-    _uploaded_image_json = _uploaded_image.json()
+    try:
+        _uploaded_image_json = _uploaded_image.json()
+    except Exception as e:
+        print(_uploaded_image)
+        return None
     """Return data"""
     return _uploaded_image_json
 
