@@ -46,7 +46,7 @@ def upload_image(image):
         URL_IMAGE,
         data=_payload,
         headers=HEADERS,
-        proxies=_proxies
+        # proxies=_proxies
     )
     """Get the JSON from the response"""
     try:
